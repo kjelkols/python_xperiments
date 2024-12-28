@@ -25,4 +25,29 @@ mixture = f"Ethanol[{x_ethanol:.4f}]&Nitrogen[{x_nitrogen:.4f}]"
 # Find dew point temperature
 pressure = 101325  # Atmospheric pressure in Pa
 dew_point = PropsSI('T', 'Q', 1, 'P', pressure, mixture) - 273.15  # Convert to Celsius
+
+density = PropsSI('D', 'T', dew_point+273.15, 'P', pressure, mixture)
+viscosity = PropsSI('V', 'T', dew_point+273.15, 'P', pressure, mixture)
+
+
+
 print(f"Dew point temperature: {dew_point:.2f} °C")
+print(f"At {dew_point} °C: Density = {density:.2f} kg/m³, Viscosity = {viscosity:.5e} Pa.s")
+
+# Air at dew point temperature
+T_air = dew_point
+density = PropsSI('D', 'T', dew_point+273.15, 'P', pressure, "air")
+viscosity = PropsSI('V', 'T', dew_point+273.15, 'P', pressure, "air")
+print(f"Air at {dew_point} °C: Density = {density:.2f} kg/m³, Viscosity = {viscosity:.5e} Pa.s")
+
+T_HOT_I = 102.6
+T_HOT_O = 49.8
+
+T_COLD_I = 35
+
+T_COLD_O = T_COLD_I + (T_HOT_I - T_HOT_O)
+
+print (T_HOT_I, T_HOT_O, T_COLD_I, T_COLD_O)
+
+EFF = (T_HOT_I - T_HOT_O) / (T_HOT_I - T_COLD_I)
+print(EFF)
