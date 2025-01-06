@@ -17,7 +17,7 @@ def debug_three_photos(root:Root):
         i += 1
     
 def imagefile_add_with_photo (imagefile:ImageFile):
-    photo = Photo(caption=imagefile.branch, grouptype=GroupType.MIXED)
+    photo = Photo(caption=imagefile.branch_str, grouptype=GroupType.MIXED)
     with get_session() as session:
         session.add(imagefile)
         session.add(photo)

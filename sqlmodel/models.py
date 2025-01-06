@@ -37,6 +37,18 @@ class Root(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     descr: str = Field(default="")
     path_str: str = Field(max_length=255)  # Store as string in the database
+
+    imagefiles: List["ImageFile"] = Relationship(back_populates="root")
+  
+    def __str__ (self) -> str:
+        txt = "..."+self.path_str[-30:]
+        imagefile_count = len(self.imagefiles) if self.imagefiles else 0        
+        return f"Root({self.id}) {txt} ({self.descr[:30]}) ({imagefile_count})"
+#        return f"Root({self.id}) {txt} ({self.descr[:30]}) ()"
+    
+    def get_path(self) -> Path:
+        return Path(self.path_str)
+    
     @property
     def path(self) -> Path:
         """Returns the file_path as a pathlib.Path object."""
@@ -48,7 +60,7 @@ class Root(SQLModel, table=True):
 
 class ImageFile(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    branch: str = Field(default="") # File name with eventual path
+    branch_str: str = Field(default="") # File name with eventual path
     basename: str = Field(default="") # File name without path
     extension: str = Field(default="") # File extension
     hash: str = Field(default="") # sha256 hash
@@ -62,6 +74,9 @@ class ImageFile(SQLModel, table=True):
     altitude: float = Field(default=0, nullable=True) # GPS altitude
     timezone: str = Field(default="") # Timezone
 
+    root_id: Optional[int] = Field(default=None, foreign_key="root.id")
+    root: Optional[Root] = Relationship(back_populates="imagefiles")
+    
     photo_id: Optional[int] = Field(default=None, foreign_key="photo.id") #2
     photo: Optional["Photo"] = Relationship (back_populates="imagefiles") #2
 
@@ -71,7 +86,7 @@ class ImageFile(SQLModel, table=True):
         fullpath = rootpath / branchpath
         filedata = MyFileData(fullpath)
         return ImageFile(
-            branch=branchpath.as_posix(),    
+            branch_str=branchpath.as_posix(),    
             basename=branchpath.name,
             extension=branchpath.suffix,
             timestamp = filedata.timestamp, 
@@ -89,18 +104,16 @@ class ImageFile(SQLModel, table=True):
     def debug_print(self):
         print (self.model_dump())
         
-        
-
     def __repr__(self):
         # Show basic details about the ImageFile and its associated Batch
         return (
-            f"ImageFile(id={self.id}, branch='{self.branch}', "
+            f"ImageFile(id={self.id}, branch='{self.branch_str}', "
             f""
         )
     def myrepr(self):
         # Show basic details about the ImageFile and its associated Batch
         return (
-            f"ImageFile(id={self.id}, branch='{self.branch}', "
+            f"ImageFile(id={self.id}, branch='{self.branch_str}', "
             f"batch_id={self.batch_id}, batch_descr='{self.batch.descr if self.batch else None}')"
         )
         

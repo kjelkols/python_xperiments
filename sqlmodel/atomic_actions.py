@@ -1,4 +1,4 @@
-from common import get_session, get_workspace_root
+from common import get_session #, get_workspace_root
 from sqlmodel import select
 from imageutil import scan_folder
 
@@ -58,10 +58,11 @@ def imagefile_create(root:Root, branch:Path):
     imagefile = ImageFile(root=root, branch_str=branch.as_posix())
     with get_session() as session:
         session.add(imagefile)
+        session.add(root)
         session.commit()
         session.refresh(imagefile)
         session.refresh(root)
-    return imagefile
+        return imagefile
 
 def imagefile_update (imagefile:ImageFile):
     with get_session() as session:
@@ -86,15 +87,17 @@ if __name__ == "__main__":
     print("rootccc:", root)
     
     print ("rootddd", root_get_by_id(root.id))
+
     
     root_print_all()
+
+    print ("Panic"); exit()
     
     imagefile = imagefile_create(root, Path("static/photos/zzz.jpg"))  #branch:Path):
     print (imagefile)
     
     
     
-    print ("Panic"); exit()
     
     
     
