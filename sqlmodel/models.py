@@ -42,7 +42,7 @@ class Root(SQLModel, table=True):
   
     def __str__ (self) -> str:
         txt = "..."+self.path_str[-30:]
-        imagefile_count = len(self.imagefiles) if self.imagefiles else 0        
+        imagefile_count = -1 #len(self.imagefiles) if self.imagefiles else 0        
         return f"Root({self.id}) {txt} ({self.descr[:30]}) ({imagefile_count})"
 #        return f"Root({self.id}) {txt} ({self.descr[:30]}) ()"
     
