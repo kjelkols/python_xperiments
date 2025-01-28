@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Stack Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Image Stack Manager</h1>
+
+    <h2>Create a New ImageFile</h2>
+    <form method="post" action="/create/">
+        <input type="text" name="path" placeholder="Image Path" required>
+        <button type="submit">Create</button>
+    </form>
+
+    <h2>Stacks</h2>
+    {% for stack in stacks %}
+        <div class="stack">
+            <h3>Stack {{ stack.id }}</h3>
+            <ul>
+                {% for image in stack.imagefiles %}
+                    <li>
+                        {{ image.path_str }}
+                        <form method="post" action="/remove/" style="display:inline;">
+                            <input type="hidden" name="imagefile_id" value="{{ image.id }}">
+                            <button type="submit">Remove</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+</body>
+</html>

@@ -2,42 +2,42 @@ from common import get_session
 from sqlmodel import select
 from imageutil import scan_folder
 
-from models import Root, ImageFile, Photo, Quality, Category, GroupType
+from models import Root, ImageFile, Stack, Quality, Category, GroupType
 
-def debug_three_photos(root:Root):
-    print ("debug_three_photos")
+def debug_three_stacks(root:Root):
+    print ("debug_three_stacks")
     paths = scan_folder (root.path)
     i = 0
     for path in paths:
         print (path)
         imagefile = ImageFile.create_from_file(rootpath=root.path, branchpath=path)
-        imagefile_add_with_photo(imagefile)
+        imagefile_add_with_stack(imagefile)
         if i==2:
             break
         i += 1
     
-def imagefile_add_with_photo (imagefile:ImageFile):
-    photo = Photo(caption=imagefile.branch_str, grouptype=GroupType.MIXED)
+def imagefile_add_with_stack (imagefile:ImageFile):
+    stack = Stack(caption=imagefile.branch_str, grouptype=GroupType.MIXED)
     with get_session() as session:
         session.add(imagefile)
-        session.add(photo)
+        session.add(stack)
         session.commit()
-        imagefile.photo = photo
+        imagefile.stack = stack
         session.refresh(imagefile)
         session.commit()
         
 def imagefile_delete(imagefile:ImageFile):
-    print ("  ########imagefile_delete", imagefile.id, imagefile.photo_id)
+    print ("  ########imagefile_delete", imagefile.id, imagefile.stack_id)
     with get_session() as session:
 #        session.refresh(imagefile)
-#        photo = imagefile.photo
-#        if photo:
-#            photo.imagefiles.remove(imagefile)
-#            if len(photo.imagefiles) == 0:
-#                session.delete(photo)
+#        stack = imagefile.stack
+#        if stack:
+#            stack.imagefiles.remove(imagefile)
+#            if len(stack.imagefiles) == 0:
+#                session.delete(stack)
 #            session.commit()
         session.refresh(imagefile)
-        session.print(imagefile.photo)
+        session.print(imagefile.stack)
         session.delete(imagefile)
         session.commit()
 
@@ -47,7 +47,7 @@ def imagefile_delete_all():
         statement = select(ImageFile)
         results = session.exec(statement)
         list = []+results.all()
-        #Todo: Delete photo if empty
+        #Todo: Delete stack if empty
     for imagefile in list:
         imagefile_delete(imagefile)
         
@@ -81,48 +81,48 @@ def imagefile_print_all():
         
 #    print (f"Found {len(paths)} files in {root.path}")
 
-def root_scan_photos(root:Root):
+def root_scan_stacks(root:Root):
     paths = scan_folder (root.path)
     print (f"Found {len(paths)} files in {root.path}")
     ZZZ="""
     with get_session() as session:
-        statement = select(Photo).where(Photo.root_id == root.id)
+        statement = select(Stack).where(Stack.root_id == root.id)
         result = session.exec(statement)
-        root.photos = result.all()
+        root.stacks = result.all()
     """
 
 
-def photo_print_list_all_overview():
-    print ("print_photos")
+def stack_print_list_all_overview():
+    print ("print_stacks")
     with get_session() as session:
-        statement = select(Photo)
+        statement = select(Stack)
         result = session.exec(statement)
-        for photo in result.all():
-            print ("     ",photo_str_imagefiles (photo))
+        for stack in result.all():
+            print ("     ",stack_str_imagefiles (stack))
        
-def photo_str_imagefiles(photo:Photo):
-    lst = photo.imagefiles
-    return f"{photo.id}: {[img.id for img in lst]}"
+def stack_str_imagefiles(stack:Stack):
+    lst = stack.imagefiles
+    return f"{stack.id}: {[img.id for img in lst]}"
        
-def photo_get_position (photo:Photo, imagefile:ImageFile):
-    print ("photo_get_position")
-    for i in range(len(photo.imagefiles)):
-        if photo.imagefiles[i].id == imagefile.id:
+def stack_get_position (stack:Stack, imagefile:ImageFile):
+    print ("stack_get_position")
+    for i in range(len(stack.imagefiles)):
+        if stack.imagefiles[i].id == imagefile.id:
             return i
     return -1
             
-def photo_set_anchor(photo:Photo, imagefile:ImageFile):
-    print ("photo_set_anchor")
-    index = photo_get_position(photo, imagefile)
+def stack_set_anchor(stack:Stack, imagefile:ImageFile):
+    print ("stack_set_anchor")
+    index = stack_get_position(stack, imagefile)
     if index > 0:
-        photo.imagefiles.insert (0, photo.imagefiles.pop(index))
+        stack.imagefiles.insert (0, stack.imagefiles.pop(index))
         with get_session() as session:
-            session.add(photo)
+            session.add(stack)
             session.commit()
     return index # Original position
 
-def ZZZ_photo_merge(src:Photo, trg:Photo):
-  print ("photo_merge", src, trg)
+def ZZZ_stack_merge(src:Stack, trg:Stack):
+  print ("stack_merge", src, trg)
   img_src = src.imagefiles[0]
   img_trg = trg.imagefiles[0]
   src.imagefiles.remove(img_src)
@@ -138,8 +138,8 @@ def ZZZ_photo_merge(src:Photo, trg:Photo):
         session.commit()
     
   
-def photo_merge(src: Photo, trg: Photo):
-    print(f"Starting photo_merge: src_id={src.id}, trg_id={trg.id}")
+def stack_merge(src: Stack, trg: Stack):
+    print(f"Starting stack_merge: src_id={src.id}, trg_id={trg.id}")
     
     # Ensure there are images to move
     if not src.imagefiles:
@@ -167,7 +167,7 @@ def photo_merge(src: Photo, trg: Photo):
                 session.delete(src)
                 session.commit()
     except Exception as e:
-        print(f"Error during photo_merge: {e}")
+        print(f"Error during stack_merge: {e}")
         session.rollback()
   
     

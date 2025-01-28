@@ -2,7 +2,7 @@ from common import get_session #, get_workspace_root
 from sqlmodel import select
 from imageutil import scan_folder
 
-from models import Root, ImageFile, Photo, Quality, Category, GroupType
+from models import Root, ImageFile, Stack, Quality, Category, GroupType
 from pathlib import Path
 
 def root_create(path: Path, descr: str = ""):
@@ -44,14 +44,14 @@ def root_scan_imagefiles(root:Root):
         root.imagefiles = result.all()
     """
 
-def root_scan_photos(root:Root):
+def root_scan_stacks(root:Root):
     paths = scan_folder (root.path)
     print (f"Found {len(paths)} files in {root.path}")
     ZZZ="""
     with get_session() as session:
-        statement = select(Photo).where(Photo.root_id == root.id)
+        statement = select(Stack).where(Stack.root_id == root.id)
         result = session.exec(statement)
-        root.photos = result.all()
+        root.stacks = result.all()
     """
 
 def imagefile_create(root:Root, branch:Path):
@@ -71,53 +71,53 @@ def imagefile_update (imagefile:ImageFile):
         session.refresh(imagefile)
         return imagefile
 
-def photo_create():
-    photo = Photo()
+def stack_create():
+    stack = Stack()
     with get_session() as session:
-        session.add(photo)
+        session.add(stack)
         session.commit()
-        return photo
+        return stack
 
-def photo_update (photo:Photo):
+def stack_update (stack:Stack):
     with get_session() as session:
-        session.add(photo)
+        session.add(stack)
         session.commit()
-        session.refresh(photo)
-        return photo
+        session.refresh(stack)
+        return stack
 
-def photo_add_imagefile_fist_attempt (photo:Photo, imagefile:ImageFile):
-# I try to add an image file to the photo by appending to the photo's imagefiles
-# However, this is not enough. If the image file belongs to another photo,
+def stack_add_imagefile_fist_attempt (stack:Stack, imagefile:ImageFile):
+# I try to add an image file to the stack by appending to the stack's imagefiles
+# However, this is not enough. If the image file belongs to another stack,
 # it must be removed from that list.
-# I don't understand why it should be possible to manipulate the photo's imagefiles
-# It should be enough to set the image's photo_id to the photo's id.
-# The list should be updated automatically by refreshing the photo.
+# I don't understand why it should be possible to manipulate the stack's imagefiles
+# It should be enough to set the image's stack_id to the stack's id.
+# The list should be updated automatically by refreshing the stack.
     with get_session() as session:
-        session.add(photo)
-        photo.imagefiles.append(imagefile)
-        session.refresh(photo)
+        session.add(stack)
+        stack.imagefiles.append(imagefile)
+        session.refresh(stack)
         session.refresh(imagefile)
         session.commit()
-        return photo
+        return stack
 
-def photo_print_imagefiles(photo:Photo):
+def stack_print_imagefiles(stack:Stack):
     with get_session() as session:
-        txt = f"Photo {photo.id} "
-        statement = select(ImageFile).where(ImageFile.photo_id == photo.id)
+        txt = f"Stack {stack.id} "
+        statement = select(ImageFile).where(ImageFile.stack_id == stack.id)
         result = session.exec(statement)
-        session.refresh (photo)
+        session.refresh (stack)
         for imagefile in result.all():
             session.refresh (imagefile)
             txt += f"{imagefile.id} "
         print (txt)
 
 # Second attempt:
-def imagefile_set_photo (imagefile:ImageFile, photo:Photo):
+def imagefile_set_stack (imagefile:ImageFile, stack:Stack):
     with get_session() as session:
         session.add(imagefile)
-        imagefile.photo = photo        
+        imagefile.stack = stack        
         session.refresh(imagefile)
-        session.refresh(photo)
+        session.refresh(stack)
         session.commit()        
         return imagefile
 
@@ -146,14 +146,14 @@ if __name__ == "__main__":
     print (imagefile)
 
    
-    photo = photo_create()
-    print (photo)
+    stack = stack_create()
+    print (stack)
     
-#    photo_add_imagefile_fist_attempt(photo, imagefile)
-    imagefile_set_photo(imagefile, photo)
-    print (photo)
+#    stack_add_imagefile_fist_attempt(stack, imagefile)
+    imagefile_set_stack(imagefile, stack)
+    print (stack)
     print (imagefile)
-    photo_print_imagefiles(photo)
+#    stack_print_imagefiles(stack)
 
     print ("Panic"); exit()
     

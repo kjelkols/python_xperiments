@@ -14,6 +14,7 @@ from typing import Optional
 from imageutil import MyFileData
 
 class Quality(int, Enum):
+    UNKNOWN = 0 # The quality is not known
     TRASH = 1
     POOR = 2
     ACCEPTABLE = 3
@@ -29,7 +30,7 @@ class Category(int, Enum):
     EXPERIMENTAL = 5 # Experimental stuff, e.g testing of camera equipment
     
 class GroupType(int, Enum):
-    MIXED = 1 # A general mix of related photos
+    MIXED = 1 # A general mix of related stacks
     SEQUENCE = 2 # A sequence of images, e.g. for animation
     PANORAMA = 3 # A panoramic view to be stitched together
     
@@ -41,9 +42,11 @@ class Root(SQLModel, table=True):
     imagefiles: List["ImageFile"] = Relationship(back_populates="root")
   
     def __str__ (self) -> str:
-        txt = "..."+self.path_str[-30:]
+        txt = self.path_str[-30:]
+        if (len(txt)>27): txt = "..."+txt
+        return f'Root, id={self.id}, descr="{self.descr}", path_str="{txt}"'
         imagefile_count = -1 #len(self.imagefiles) if self.imagefiles else 0        
-        return f"Root({self.id}) {txt} ({self.descr[:30]}) ({imagefile_count})"
+#        return f"Root({self.id}) {txt} ({self.descr[:30]}) ({imagefile_count})"
 #        return f"Root({self.id}) {txt} ({self.descr[:30]}) ()"
     
     def get_path(self) -> Path:
@@ -77,20 +80,24 @@ class ImageFile(SQLModel, table=True):
     root_id: Optional[int] = Field(default=None, foreign_key="root.id")
     root: Optional[Root] = Relationship(back_populates="imagefiles")
     
-    photo_id: Optional[int] = Field(default=None, foreign_key="photo.id") #2
-    photo: Optional["Photo"] = Relationship (back_populates="imagefiles") #2
+    stack_id: Optional[int] = Field(default=None, foreign_key="stack.id") #2
+    stack: Optional["Stack"] = Relationship (back_populates="imagefiles") #2
 
     @staticmethod
     def create_from_file (rootpath:Path, branchpath:Path) -> "ImageFile":
         # Create a new ImageFile object from a file
         fullpath = rootpath / branchpath
         filedata = MyFileData(fullpath)
+        quality = Quality.ACCEPTABLE
+        if filedata.filesize<=0:
+          quality = Quality.UNKNOWN
+            
         return ImageFile(
             branch_str=branchpath.as_posix(),    
             basename=branchpath.name,
             extension=branchpath.suffix,
             timestamp = filedata.timestamp, 
-            quality=Quality.ACCEPTABLE, 
+            quality=quality, 
             category=Category.GENERAL, 
             latitude=filedata.latitude, 
             longitude=filedata.longitude, 
@@ -117,13 +124,13 @@ class ImageFile(SQLModel, table=True):
             f"batch_id={self.batch_id}, batch_descr='{self.batch.descr if self.batch else None}')"
         )
         
-class Photo(SQLModel, table=True):
+class Stack(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     caption: str = Field(default="")
     grouptype: GroupType = Field (default=GroupType.MIXED)
    
-    imagefiles: List["ImageFile"] = Relationship (back_populates="photo") #2
-#    album_list: List["Album"] = Relationship(back_populates="photo_list", link_model=PhotoAlbumLink) #3
+    imagefiles: List["ImageFile"] = Relationship (back_populates="stack") #2
+#    album_list: List["Album"] = Relationship(back_populates="stack_list", link_model=StackAlbumLink) #3
 
 
     def debug_print(self):
@@ -133,4 +140,5 @@ class Photo(SQLModel, table=True):
     
 if __name__ == "__main__":
     print ("Trying to load some images")
+    
     print ("Panic");exit()    
