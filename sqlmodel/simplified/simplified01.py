@@ -1,6 +1,6 @@
 from sqlmodel import Field, Relationship, SQLModel, create_engine, Session, select
 from typing import List, Optional
-
+from pathlib import Path
 
 class ImageFile(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -15,10 +15,20 @@ class Stack(SQLModel, table=True):
 
 
 # Database setup
-DATABASE_URL = "sqlite:///ZZZ_image_stack.db"
+DATABASE_FILE = "ZZZ_image_stack.db"
+DATABASE_URL = f"sqlite:///{DATABASE_FILE}"
 engine = create_engine(DATABASE_URL)
 
-
+def delete_database():
+    file_path = Path(DATABASE_FILE)
+# Check if the file exists before attempting to delete it
+    if file_path.exists():
+        # Delete the file
+        file_path.unlink()
+        print(f"    #### {file_path} has been deleted successfully.")
+    else:
+        print(f"    #### {file_path} does not exist.")
+    
 def create_tables():
     SQLModel.metadata.create_all(engine)
 
@@ -115,11 +125,7 @@ def show_all_stacks():
         for stack in stacks:
             show_stack(stack.id)
 
-
-# Example Usage
-if __name__ == "__main__":
-    create_tables()
-
+def run_example():
     # Create ImageFiles
     create_image_file("image1.jpg")
     create_image_file("image2.jpg")
@@ -132,3 +138,12 @@ if __name__ == "__main__":
 
     # Show all stacks after removal
     show_all_stacks()
+    
+
+
+# Example Usage
+if __name__ == "__main__":
+    delete_database()
+    create_tables()
+    
+    run_example()
