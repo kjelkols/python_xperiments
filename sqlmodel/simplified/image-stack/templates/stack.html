@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stack {{ stack.id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+    <h1>Stack {{ stack.id }}</h1>
+    <a href="/">Back to All Stacks</a>
+
+    <ul>
+        {% for imagefile in stack.imagefiles %}
+            <li>
+                {{ imagefile.path_str }}
+
+                <form id="move-form-{{ imagefile.id }}" onsubmit="updateMoveFormAction(event, {{ imagefile.id }})" style="display:inline;">
+                    <input type="number" id="new_stack_id-{{ imagefile.id }}" placeholder="New Stack ID" required>
+                    <button type="submit">Move</button>
+                </form>
+                
+                <script>
+                function updateMoveFormAction(event, imagefileId) {
+                    event.preventDefault();
+                    const newStackId = document.getElementById(`new_stack_id-${imagefileId}`).value;
+                    const form = document.getElementById(`move-form-${imagefileId}`);
+                    form.action = `/move-image/${imagefileId}/to/${newStackId}`;
+                    form.submit();
+                }
+                </script>                
+
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stacks with ImageFiles</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+    <h1>Stacks with ImageFiles</h1>
+    <ul>
+        {% for stack in stacks %}
+            <li>
+                <strong>Stack ID: {{ stack.id }}</strong>
+                <ul>
+                    {% for imagefile in stack.imagefiles %}
+                        <li>{{ imagefile.path_str }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="/">Back to Home</a>
+</body>
+</html>

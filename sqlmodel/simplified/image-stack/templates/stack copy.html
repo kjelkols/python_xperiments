@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stack {{ stack.id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+    <h1>Stack {{ stack.id }}</h1>
+    <a href="/">Back to All Stacks</a>
+
+    <ul>
+        {% for imagefile in stack.imagefiles %}
+            <li>
+                {{ imagefile.path_str }}
+                <form action="/move-image/{{ imagefile.id }}/to/" method="post" style="display:inline;">
+                    <input type="number" name="new_stack_id" placeholder="New Stack ID" required>
+                    <button type="submit">Move</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

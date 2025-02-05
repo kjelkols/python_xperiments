@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Stack Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+    <h1>Image Stack Manager</h1>
+
+    <!-- Form to add a new image with a new stack -->
+    <h2>Add Image</h2>
+    <form action="/add-image/" method="post">
+        <input type="text" name="path_str" placeholder="Enter image path" required>
+        <button type="submit">Add Image</button>
+    </form>
+
+    <!-- List all stacks -->
+    <h2>Stacks</h2>
+    <ul>
+        {% for stack in stacks %}
+            <li>
+                <strong>Stack ID: {{ stack.id }}</strong>
+                <a href="/stack/{{ stack.id }}">View</a>
+                <ul>
+                    {% for imagefile in stack.imagefiles %}
+                        <li>
+                            {{ imagefile.path_str }}
+                            <form id="move-form-{{ imagefile.id }}" onsubmit="updateMoveFormAction(event, {{ imagefile.id }})" method="post" style="display:inline;">
+                                <input type="number" id="new_stack_id-{{ imagefile.id }}" placeholder="New Stack ID" >
+                                <button type="submit" formaction="/move-image/{{ imagefile.id }}/to/">Move</button>
+                                <button type="submit" formaction="/split-image/{{ imagefile.id }}/">Split</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <script>
+    function updateMoveFormAction(event, imagefileId) {
+        event.preventDefault();
+        const newStackId = document.getElementById(`new_stack_id-${imagefileId}`).value;
+        const form = document.getElementById(`move-form-${imagefileId}`);
+        form.action = `/move-image/${imagefileId}/to/${newStackId}`;
+        form.submit();
+    }
+    </script>
+</body>
+</html>

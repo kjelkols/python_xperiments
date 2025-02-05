@@ -1,0 +1,163 @@
+from sqlmodel import Field, Relationship, SQLModel, create_engine, Session, select
+from typing import List, Optional
+from pathlib import Path
+
+class ImageFile(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    path_str: str = Field(default="", nullable=False)  # File name with path
+    stack_id: Optional[int] = Field(default=None, foreign_key="stack.id")  # Foreign key to Stack
+    stack: Optional["Stack"] = Relationship(back_populates="imagefiles")  # Relationship to Stack
+
+class Stack(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    imagefiles: List[ImageFile] = Relationship(back_populates="stack")  # Relationship to ImageFiles
+
+# Database setup
+DATABASE_FILE = "ZZZ_image_stack.db"
+DATABASE_URL = f"sqlite:///{DATABASE_FILE}"
+engine = create_engine(DATABASE_URL)
+
+def helper_delete_database():
+    file_path = Path(DATABASE_FILE)
+# Check if the file exists before attempting to delete it
+    if file_path.exists():
+        # Delete the file
+        file_path.unlink()
+        print(f"    #### {file_path} has been deleted successfully.")
+    else:
+        print(f"    #### {file_path} does not exist.")
+
+def create_tables():
+    SQLModel.metadata.create_all(engine)
+
+
+# Atomic Actions
+def create_image_file(path: str):
+    """Add a new ImageFile and create a Stack for it."""
+    with Session(engine) as session:
+        create_image_file_core(session, path)
+
+def create_image_file_core(session:Session, path: str):
+        """Add a new ImageFile and create a Stack for it."""
+        new_stack = Stack()
+        session.add(new_stack)
+        session.commit()  # Commit to get the stack ID
+
+        new_image_file = ImageFile(path_str=path, stack_id=new_stack.id)
+        session.add(new_image_file)
+        session.commit()
+        print(f"Created ImageFile with ID {new_image_file.id} in Stack {new_stack.id}")
+
+
+def move_image_file_core(session:Session, imagefile_id: int, target_stack_id: int):
+        """Move an ImageFile from one stack to another."""
+        # Fetch the ImageFile and its current stack
+        imagefile = session.get(ImageFile, imagefile_id)
+        if not imagefile:
+            print("ImageFile not found!")
+            return
+
+        current_stack_id = imagefile.stack_id
+        imagefile.stack_id = target_stack_id
+        session.add(imagefile)
+        session.commit()
+        print(f"Moved ImageFile {imagefile_id} to Stack {target_stack_id}")
+
+        # Check if the source stack is empty
+        if current_stack_id:
+            stack = session.get(Stack, current_stack_id)
+            if stack and not stack.imagefiles:  # If no images remain
+                session.delete(stack)
+                session.commit()
+                print(f"Deleted empty Stack {current_stack_id}")
+
+def move_image_file(imagefile_id: int, target_stack_id: int):
+    """Move an ImageFile from one stack to another."""
+    with Session(engine) as session:
+        move_image_file_core (session, imagefile_id, target_stack_id)
+
+
+def remove_image_file_core(session:Session, imagefile_id: int):
+        """Remove an ImageFile from its current Stack and place it in a new Stack."""
+        # Fetch the ImageFile
+        imagefile = session.get(ImageFile, imagefile_id)
+        if not imagefile:
+            print("ImageFile not found!")
+            return
+
+        # Create a new Stack
+        new_stack = Stack()
+        session.add(new_stack)
+        session.commit()  # Commit to get the stack ID
+
+        # Update the ImageFile to reference the new Stack
+        current_stack_id = imagefile.stack_id
+        imagefile.stack_id = new_stack.id
+        session.add(imagefile)
+        session.commit()
+        print(f"Removed ImageFile {imagefile_id} from Stack {current_stack_id} to new Stack {new_stack.id}")
+
+        # Check if the source stack is empty
+        if current_stack_id:
+            stack = session.get(Stack, current_stack_id)
+            if stack and not stack.imagefiles:  # If no images remain
+                session.delete(stack)
+                session.commit()
+                print(f"Deleted empty Stack {current_stack_id}")
+
+def remove_image_file(imagefile_id: int):
+    """Remove an ImageFile from its current Stack and place it in a new Stack."""
+    with Session(engine) as session:
+        remove_image_file_core(session, imagefile_id)
+
+
+def show_stack(stack_id: int):
+    """Print the stack ID and all its ImageFiles."""
+    with Session(engine) as session:
+        stack = session.get(Stack, stack_id)
+        if not stack:
+            print("Stack not found!")
+            return
+
+        print(f"Stack ID: {stack.id}")
+        for imagefile in stack.imagefiles:
+            print(f" - ImageFile ID: {imagefile.id}, Path: {imagefile.path_str}")
+
+
+def show_all_stacks():
+    """Perform show_stack on all stacks in the database."""
+    with Session(engine) as session:
+        stacks = session.exec(select(Stack)).all()
+        if not stacks:
+            print("No stacks found!")
+            return
+
+        for stack in stacks:
+            show_stack(stack.id)
+
+def run_example():
+    # Create ImageFiles
+    create_image_file("image1.jpg")
+    create_image_file("image2.jpg")
+
+    # Show all stacks
+    print ("########################")
+    show_all_stacks()
+    print ("########################")
+
+    # Remove an ImageFile into a new Stack
+    remove_image_file(imagefile_id=1)
+
+    # Show all stacks after removal
+    print ("########################")
+    show_all_stacks()
+    print ("########################")
+    
+
+
+# Example Usage
+if __name__ == "__main__":
+    helper_delete_database()
+    create_tables()
+    
+    run_example()

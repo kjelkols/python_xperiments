@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Stack Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+    <h1>Image Stack Manager</h1>
+
+    <!-- Form to create a new Stack with ImageFiles -->
+    <h2>Create Stack with ImageFiles</h2>
+    <form action="/stacks/" method="post">
+        <label for="paths">Enter image file paths (one per line):</label><br>
+        <textarea id="paths" name="paths" rows="5" cols="50" required></textarea><br>
+        <button type="submit">Create Stack</button>
+    </form>
+
+    <!-- List all Stacks with their ImageFiles -->
+    <h2>Stacks</h2>
+    <ul>
+        {% for stack in stacks %}
+            <li>
+                <strong>Stack ID: {{ stack.id }}</strong>
+                <ul>
+                    {% for imagefile in stack.imagefiles %}
+                        <li>{{ imagefile.path_str }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

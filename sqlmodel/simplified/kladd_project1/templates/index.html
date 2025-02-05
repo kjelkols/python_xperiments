@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Stack Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+    <h1>Image Stack Manager</h1>
+
+    <!-- Vis meldinger eller feil -->
+    {% if message %}
+        <p style="color: green;">{{ message }}</p>
+    {% endif %}
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <!-- Skjema for å opprette en ny ImageFile -->
+    <h2>Create ImageFile</h2>
+    <form action="/imagefiles/" method="post">
+        <input type="text" name="path_str" placeholder="Enter image file path" required>
+        <button type="submit">Create</button>
+    </form>
+
+    <!-- Skjema for å flytte en ImageFile -->
+    <h2>Move ImageFile</h2>
+    <form action="/imagefiles/{imagefile_id}/move/{new_stack_id}" method="post">
+        <input type="number" name="imagefile_id" placeholder="ImageFile ID" required>
+        <input type="number" name="new_stack_id" placeholder="New Stack ID" required>
+        <button type="submit">Move</button>
+    </form>
+
+    <!-- Knapp for å slette tomme Stacks -->
+    <h2>Cleanup Stacks</h2>
+    <form action="/stacks/cleanup" method="post">
+        <button type="submit">Delete Empty Stacks</button>
+    </form>
+
+    <!-- Vis ImageFiles -->
+    <h2>ImageFiles</h2>
+    <ul>
+        {% for imagefile in imagefiles %}
+            <li>{{ imagefile.path_str }} (Stack ID: {{ imagefile.stack_id }})</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Vis Stacks -->
+    <h2>Stacks</h2>
+    <ul>
+        {% for stack in stacks %}
+            <li>Stack ID: {{ stack.id }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
