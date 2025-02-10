@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Storage Devices</title>
+</head>
+<body>
+    <h2>Storage Devices List</h2>
+    <ul>
+        {% for device in devices %}
+            <li><strong>{{ device.uniquename }}</strong> - {{ device.mountpoint }} ({{ device.description }})</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
